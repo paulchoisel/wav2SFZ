@@ -18,3 +18,5 @@ As such, it is not easy to use (requires Python), even if I'll try to be as clea
  - Python 3.9 + PIP
  - Musescore 3.6
  - Audacity or any tool to crop and convert your audio file 
+
+This tool might work with other versions of Python and Musescore (and even with other notation software) but this is the versions I used to test it.
