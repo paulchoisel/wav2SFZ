@@ -2,12 +2,18 @@ import argparse
 import math
 from pymusicxml import Score, Part, Measure, BeamedGroup, Note, Rest, MetronomeMark
 import os
+from typing import TextIO, Tuple
 import wave
 
-from utils import isFile
+from .constants import MIDI_MAX_NOTES, SEMI_TONES_NUMBER, SECONDS_PER_MINUTE, Pitches
+from .utils import isFile
 
 
-def exportBar(waveObject, outputPath, barNumber, barDuration):
+def exportBar(
+        waveObject: wave.Wave_read,
+        outputPath: str, barNumber: int,
+        barDuration: float
+) -> None:
     outputFile = wave.open(outputPath, 'wb')
     outputFile.setnchannels(waveObject.getnchannels())
     outputFile.setsampwidth(waveObject.getsampwidth())
@@ -18,7 +24,7 @@ def exportBar(waveObject, outputPath, barNumber, barDuration):
     outputFile.close()
 
 
-def initSFZFile(sfzDir, songName, numberOfParts):
+def initSFZFile(sfzDir: str, songName: str, numberOfParts: int) -> list[TextIO]:
 
     sfzFiles = [
         open(os.path.join(sfzDir, f'{songName}_{partNumber}.sfz'), "w")
@@ -30,11 +36,12 @@ def initSFZFile(sfzDir, songName, numberOfParts):
     return sfzFiles
 
 
-def addKeyToSFZFile(sfzFiles, sampleName, keyNumber):
-    sfzFiles[int(keyNumber / 128)].write(f"<region> sample={sampleName} key={keyNumber % 128}\n")
+def addKeyToSFZFile(sfzFiles: list[TextIO], sampleName: str, keyNumber: int) -> None:
+    sfzFiles[int(keyNumber / MIDI_MAX_NOTES)].write(
+        f"<region> sample={sampleName} key={keyNumber % MIDI_MAX_NOTES}\n")
 
 
-def initMusicXMLData(songName, numberOfParts):
+def initMusicXMLData(songName: str, numberOfParts: int) -> Tuple[Score, list[Part]]:
     score = Score(title=songName)
     parts = [Part(f"{songName}_{partNumber}") for partNumber in range(numberOfParts)]
     for part in parts:
@@ -42,22 +49,19 @@ def initMusicXMLData(songName, numberOfParts):
     return score, parts
 
 
-pitches = ["c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"]
+def getNoteFromBarNumber(barNumber: int) -> str:
+    pitch = list(Pitches)[barNumber % SEMI_TONES_NUMBER]
+    return f"{pitch.value}{int(barNumber/SEMI_TONES_NUMBER) - 1}"
 
 
-def getNoteFromBarNumber(barNumber):
-    pitch = pitches[barNumber % 12]
-    return f"{pitch}{int(barNumber/12) - 1}"
-
-
-def addNoteToMusicXMLData(parts, barNumber, tempo):
+def addNoteToMusicXMLData(parts: list[Part], barNumber: int, tempo: int, beatsPerBar: int) -> None:
     for partNumber, part in enumerate(parts):
-        if int(barNumber / 128) == partNumber:
+        if int(barNumber / MIDI_MAX_NOTES) == partNumber:
             part.append(
                 Measure([
                     BeamedGroup([
                         Note(
-                            getNoteFromBarNumber(barNumber % 128), beatsPerBar,
+                            getNoteFromBarNumber(barNumber % MIDI_MAX_NOTES), beatsPerBar,
                             directions=MetronomeMark(1, tempo) if barNumber == 0 else [])
                     ]),
                 ],
@@ -72,8 +76,7 @@ def addNoteToMusicXMLData(parts, barNumber, tempo):
                     time_signature=(beatsPerBar, 4) if barNumber == 0 else None))
 
 
-if __name__ == '__main__':
-
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("waveFilePath", type=isFile)
     parser.add_argument("tempo", type=int)
@@ -87,14 +90,14 @@ if __name__ == '__main__':
     # Contants
     tempo = args.tempo
     beatsPerBar = args.beatsPerBar
-    barDuration = (60 * beatsPerBar) / tempo
+    barDuration = (SECONDS_PER_MINUTE * beatsPerBar) / tempo
     songName = waveFilePath.replace('.wav', "")
     sfzDir = f"{songName}SFZ"
     numberOfBars = math.ceil(
         (waveObject.getnframes() / waveObject.getframerate()) / barDuration)
     # MIDI can only work with 128 notes, so if the source wave file has more than
     # 128 bars, we have to use several parts/instruments
-    numberOfParts = math.ceil(numberOfBars / 128)
+    numberOfParts = math.ceil(numberOfBars / MIDI_MAX_NOTES)
 
     # Create the SFZ folder
     os.mkdir(sfzDir)
@@ -122,8 +125,11 @@ if __name__ == '__main__':
         addKeyToSFZFile(sfzFiles, sampleName, barNumber)
 
         # Add the corresponding notes in the score
-        addNoteToMusicXMLData(parts, barNumber, tempo)
+        addNoteToMusicXMLData(parts, barNumber, tempo, beatsPerBar)
 
     for sfzFile in sfzFiles:
         sfzFile.close()
     score.export_to_file(musicXMLFilePath)
+
+if __name__ == '__main__':
+    main()
