@@ -6,7 +6,7 @@ from typing import TextIO, Tuple
 import wave
 
 from .constants import MIDI_MAX_NOTES, SEMI_TONES_NUMBER, SECONDS_PER_MINUTE, Pitches
-from .utils import isFile
+from .utils import isFile, isWriteableDirectory
 
 
 def exportBar(
@@ -76,23 +76,17 @@ def addNoteToMusicXMLData(parts: list[Part], barNumber: int, tempo: int, beatsPe
                     time_signature=(beatsPerBar, 4) if barNumber == 0 else None))
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("waveFilePath", type=isFile)
-    parser.add_argument("tempo", type=int)
-    parser.add_argument("--beatsPerBar", type=int, default=4)
-    args = parser.parse_args()
+def convertWav2sfz(waveFilePath, tempo, beatsPerBar, soundfontFolder, musicXMLFilePath):
 
     # Open the source wave file
-    waveFilePath = args.waveFilePath
     waveObject = wave.open(waveFilePath, "rb")
 
     # Contants
-    tempo = args.tempo
-    beatsPerBar = args.beatsPerBar
+    tempo = tempo
+    beatsPerBar = beatsPerBar
     barDuration = (SECONDS_PER_MINUTE * beatsPerBar) / tempo
-    songName = waveFilePath.replace('.wav', "")
-    sfzDir = f"{songName}SFZ"
+    songName = os.path.basename(waveFilePath).replace('.wav', "")
+    sfzDir = os.path.join(soundfontFolder, f"{songName}_SFZ")
     numberOfBars = math.ceil(
         (waveObject.getnframes() / waveObject.getframerate()) / barDuration)
     # MIDI can only work with 128 notes, so if the source wave file has more than
@@ -107,7 +101,6 @@ def main():
 
     # Create the PyMusicXML objects to store the score data
     score, parts = initMusicXMLData(songName, numberOfParts)
-    musicXMLFilePath = os.path.join(sfzDir, f'{songName}.musicxml')
 
     # For each bar, export a sample, add a line in the sfz file and add the corresponding note
     # in the MusicXML data
@@ -130,6 +123,36 @@ def main():
     for sfzFile in sfzFiles:
         sfzFile.close()
     score.export_to_file(musicXMLFilePath)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("waveFilePath", type=isFile)
+    parser.add_argument("tempo", type=int)
+    parser.add_argument("--beatsPerBar", type=int, default=4)
+    parser.add_argument("--soundfontFolder", type=isWriteableDirectory, default=None)
+    parser.add_argument("--musicXMLFilePath", type=isWriteableDirectory, default=None)
+    args = parser.parse_args()
+
+    soundfontFolder = args.soundfontFolder
+    if soundfontFolder is None:
+        soundfontFolder = os.path.join(os.path.dirname(args.waveFilePath))
+
+    musicXMLFilePath = args.musicXMLFilePath
+    if musicXMLFilePath is None:
+        musicXMLFilePath = os.path.join(
+            os.path.dirname(args.waveFilePath),
+            f"{os.path.basename(args.waveFilePath)}.musicxml"
+        )
+
+    convertWav2sfz(
+        args.waveFilePath,
+        args.tempo,
+        args.beatsPerBar,
+        soundfontFolder,
+        musicXMLFilePath
+    )
+
 
 if __name__ == '__main__':
     main()
