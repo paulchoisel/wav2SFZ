@@ -1,5 +1,8 @@
 import os
 import pygubu
+# Needed for pyinstaller
+import pygubu.builder.ttkstdwidgets
+import sys
 import tkinter as tk
 import wave
 
@@ -56,6 +59,16 @@ class MessageBoxMessages(Enum):
     )
 
 
+def getDataPath(pyinstallerPath, setuptoolsPath):
+    """
+    Return the right path to the UI, according to if the
+    tool is bundledwith pyinstaller or setuptools
+    """
+    if hasattr(sys, "_MEIPASS"):
+        return os.path.join(sys._MEIPASS, pyinstallerPath)
+    return os.path.join(resources.files('wav2sfz'), setuptoolsPath)
+
+
 class wav2sfzApp(pygubu.TkApplication):
 
     def __init__(self, root):
@@ -63,10 +76,11 @@ class wav2sfzApp(pygubu.TkApplication):
 
         # Create the UI
         self.builder = pygubu.Builder()
-        self.builder.add_from_file(os.path.join(resources.files('wav2sfz'), 'UI/ui.ui'))
+        # self.builder.add_from_file(uiPath())
+        self.builder.add_from_file(getDataPath("ui/ui.ui", 'UI/ui.ui'))
 
         # Apply the style (https://github.com/TkinterEP/ttkthemes/tree/master/ttkthemes/themes)
-        root.tk.call('source', os.path.join(resources.files('wav2sfz'), 'UI/yaru/yaru.tcl'))
+        root.tk.call('source', getDataPath("yaru/yaru.tcl", 'UI/yaru/yaru.tcl'))
         guiStyle = ttk.Style()
         guiStyle.theme_use('yaru')
 
