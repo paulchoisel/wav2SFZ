@@ -1,11 +1,59 @@
 import os
 import pygubu
 import tkinter as tk
+import wave
 
+from enum import Enum
 from importlib import resources
-from tkinter import filedialog, ttk
+from tkinter import filedialog, messagebox, ttk
 
 from .wav2sfz import convertWav2sfz
+from .utils import isFile, isWriteableDirectory
+
+
+class MessageBoxMessage:
+
+    def __init__(self, title, message):
+        self.title = title
+        self.message = message
+
+
+class MessageBoxMessages(Enum):
+
+    WAVE_FILE_NOT_VALID_FILE = MessageBoxMessage(
+        "Wave file is not a valid file.",
+        "The path to the .wav file does not lead to a valid/readable file.\n"
+        "Please make sure you entered a valid path, "
+        "and check you have the permissions to read the file."
+    )
+    WAVE_FILE_NOT_VALID_WAVE_FILE = MessageBoxMessage(
+        "Wave file is not a valid Wave file",
+        "The path to the .wav file does not lead to a valid Wave file.\n"
+        "The tool is only compatible with .wav files.\n"
+        "Please use an appropriate software (Audacity for example) "
+        "to convert your audio file in the Wave format."
+    )
+    TEMPO_NOT_INT = MessageBoxMessage(
+        "The tempo is not valid.",
+        "The tempo value is not valid.\n"
+        "Please enter a valid number."
+    )
+    SOUNDFONT_FOLDER_NOT_WRITEABLE = MessageBoxMessage(
+        "The Musescore soundfont folder is not writeable.",
+        "The path to the Musescore soundfont folder is not writeable.\n"
+        "Please make sure you entered a valid path and you have the permissions to write in it."
+    )
+    MUSICXML_PATH_NOT_WRITEABLE = MessageBoxMessage(
+        "The output MusicXML file is not writeable.",
+        "The path to the output MusicXML file is not writeable.\n"
+        "Please make sure you entered a valid path and you have the permissions to write in it."
+    )
+    CONVERSION_SUCCESSFUL = MessageBoxMessage(
+        "Conversion successful !",
+        "Conversion successful !\n"
+        "Please follow the rest of the instructions here :\n"
+        "INSERT LINK"
+    )
 
 
 class wav2sfzApp(pygubu.TkApplication):
@@ -41,18 +89,62 @@ class wav2sfzApp(pygubu.TkApplication):
         entry.delete(0, tk.END)
         entry.insert(0, text)
 
-    def convertWavFile(self):
-        convertWav2sfz(
-            self.waveFileEntry.get(),
-            int(self.tempoEntry.get()),
-            4,
-            self.soundfontFolderEntry.get(),
-            self.musicXMLPathEntry.get()
+    @staticmethod
+    def displayMessageBox(messageBoxMessage, messageBoxFunction=messagebox.showerror):
+        messageBoxFunction(
+            title=messageBoxMessage.title,
+            message=messageBoxMessage.message
         )
 
+    def validateInput(self):
+        try:
+            isFile(self.waveFileEntry.get())
+            wave.open(self.waveFileEntry.get(), "rb").close()
+        except ValueError:
+            return self.displayMessageBox(MessageBoxMessages.WAVE_FILE_NOT_VALID_FILE.value)
+        except wave.Error:
+            return self.displayMessageBox(MessageBoxMessages.WAVE_FILE_NOT_VALID_WAVE_FILE.value)
+
+        try:
+            int(self.tempoEntry.get())
+        except ValueError:
+            return self.displayMessageBox(MessageBoxMessages.TEMPO_NOT_INT.value)
+
+        try:
+            isWriteableDirectory(self.soundfontFolderEntry.get())
+        except ValueError:
+            return self.displayMessageBox(MessageBoxMessages.SOUNDFONT_FOLDER_NOT_WRITEABLE.value)
+
+        try:
+            isWriteableDirectory(os.path.dirname(self.musicXMLPathEntry.get()))
+        except ValueError:
+            return self.displayMessageBox(MessageBoxMessages.MUSICXML_PATH_NOT_WRITEABLE.value)
+
+        return True
+
+    def convertWavFile(self):
+        if not self.validateInput():
+            return
+
+        try:
+            convertWav2sfz(
+                self.waveFileEntry.get(),
+                int(self.tempoEntry.get()),
+                4,
+                self.soundfontFolderEntry.get(),
+                self.musicXMLPathEntry.get()
+            )
+            self.displayMessageBox(
+                MessageBoxMessages.CONVERSION_SUCCESSFUL.value, messagebox.showinfo)
+        except Exception as e:
+            messagebox.showerror(title="An error occurred...", message=str(e))
+
     def browseWaveFile(self):
-        self.setEntryText(self.waveFileEntry, filedialog.askopenfilename(
-            filetypes=[('Wave file', '*.wav')]))
+        waveFilePath = filedialog.askopenfilename(filetypes=[('Wave file', '*.wav')])
+        self.setEntryText(self.waveFileEntry, waveFilePath)
+
+        if not self.musicXMLPathEntry.get():
+            self.setEntryText(self.musicXMLPathEntry, waveFilePath.replace(".wav", ".musicxml"))
 
     def browseSoundfontFolder(self):
         self.setEntryText(self.soundfontFolderEntry, filedialog.askdirectory())
