@@ -1,8 +1,9 @@
 import os
-from tkinter import filedialog
-import tkinter as tk
 import pygubu
+import tkinter as tk
+
 from importlib import resources
+from tkinter import filedialog, ttk
 
 from .wav2sfz import convertWav2sfz
 
@@ -11,11 +12,20 @@ class wav2sfzApp(pygubu.TkApplication):
 
     def __init__(self, root):
         super(wav2sfzApp, self).__init__(root)
+
+        # Create the UI
         self.builder = pygubu.Builder()
         self.builder.add_from_file(os.path.join(resources.files('wav2sfz'), 'UI/ui.ui'))
 
+        # Apply the style (https://github.com/TkinterEP/ttkthemes/tree/master/ttkthemes/themes)
+        root.tk.call('source', os.path.join(resources.files('wav2sfz'), 'UI/yaru/yaru.tcl'))
+        guiStyle = ttk.Style()
+        guiStyle.theme_use('yaru')
+
+        # Set the window title
         self.set_title("Wav2sfz")
 
+        # Store a reference to the root frame
         self.mainWindow = self.builder.get_object('mainFrame')
 
         # Input fields

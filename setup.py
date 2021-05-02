@@ -37,6 +37,7 @@ setup(
     ],
 
     package_data={
-        'ui': ['*.ui']
+        'ui': ['UI/ui.ui'],
+        'yaru': ['UI/yaru/*']
     }
 )
