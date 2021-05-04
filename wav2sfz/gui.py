@@ -90,6 +90,10 @@ class wav2sfzApp(pygubu.TkApplication):
         # Store a reference to the root frame
         self.mainWindow = self.builder.get_object('mainFrame')
 
+        # Set the favicon
+        favicon = tk.PhotoImage(file=getDataPath("ui/favicon.png", 'UI/favicon.png'))
+        root.iconphoto(False, favicon)
+
         # Input fields
         self.waveFileEntry = self.builder.get_object('waveFileEntry')
         self.tempoEntry = self.builder.get_object('tempoSpinbox')

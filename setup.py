@@ -38,6 +38,7 @@ setup(
 
     package_data={
         'ui': ['UI/ui.ui'],
-        'yaru': ['UI/yaru/*']
+        'yaru': ['UI/yaru/*'],
+        'favicon': ['UI/favicon.png']
     }
 )
