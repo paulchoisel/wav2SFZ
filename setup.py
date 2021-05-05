@@ -27,12 +27,15 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'wav2sfz = wav2sfz.wav2sfz:main',
+            'wav2sfz = wav2sfz.wav2sfz:main'
+        ],
+        'gui_scripts': [
             'wav2sfz-gui = wav2sfz.gui:main'
         ]
     },
 
     install_requires=[
+        'pygubu',
         'pymusicxml'
     ],
 

@@ -36,13 +36,14 @@ def Entrypoint(dist, group, name, **kwargs):
     return Analysis(
         [script_path] + kwargs.get('scripts', []),
         datas= [
-            ("/home/pchoisel/Documents/wav2sfz/wav2sfz/UI/ui.ui", "ui"),
-            ("/home/pchoisel/Documents/wav2sfz/wav2sfz/UI/yaru/", "yaru")
+            ("./wav2sfz/UI/ui.ui", "ui"),
+            ("./wav2sfz/UI/yaru/", "yaru"),
+			("./wav2sfz/UI/favicon.png", "favicon"),
         ],
         **kwargs
     )
 
-a = Entrypoint('wav2sfz', 'console_scripts', 'wav2sfz-gui')
+a = Entrypoint('wav2sfz', 'gui_scripts', 'wav2sfz-gui')
 
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
@@ -59,4 +60,5 @@ exe = EXE(pyz,
           upx=True,
           upx_exclude=[],
           runtime_tmpdir=None,
-          console=True )
+          console=False,
+          icon='favicon.ico')

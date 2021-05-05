@@ -91,7 +91,7 @@ class wav2sfzApp(pygubu.TkApplication):
         self.mainWindow = self.builder.get_object('mainFrame')
 
         # Set the favicon
-        favicon = tk.PhotoImage(file=getDataPath("ui/favicon.png", 'UI/favicon.png'))
+        favicon = tk.PhotoImage(file=getDataPath("favicon/favicon.png", 'UI/favicon.png'))
         root.iconphoto(False, favicon)
 
         # Input fields
