@@ -7,7 +7,7 @@
 
 ![musescore_instruments](images/musescore_instruments.png) 
 
- - Add as many organs as there are instruments in the MusicXML file
+ - Add as many voices as there are instruments in the MusicXML file
 
 For example, in this MusicXML, there are two instruments
 ![musicxml_two_instruments](images/musicxml_two_instruments.png)

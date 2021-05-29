@@ -5,8 +5,7 @@ This tool allows to import and synchronize an audio track in Musescore to help y
 
 ### Notice
 
-This tool is nothing more than a quick hack, to use while waiting for a better solution directly integrated in Musescore.  
-As such, it is not easy to use (requires Python), even if I'll try to be as clear as possible in the instructions.
+This tool is nothing more than a quick hack, to use while waiting for a better solution directly integrated in Musescore.
 
 ## How does it work ?
 

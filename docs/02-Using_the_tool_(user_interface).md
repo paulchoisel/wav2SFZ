@@ -9,9 +9,9 @@ In the new window, you have to enter four values :
  - Path to the .wav file : This is the absolute path to the .wav file of your audio track. Ex: `C:\Users\myuser\Documents\4th_symphony.wav`
  - Tempo : The tempo of the audio track. It will be used to divide the track into bars, so it needs to be as precise as possible.
  - Musescore soundfont folder. The path to the folder where Musescore scores the user's soundfonts.
- > the default location is:
- > Windows: %HOMEPATH%\Documents\MuseScore3\Soundfonts
- > macOS and Linux: ~/Documents/MuseScore3/Soundfonts
+ > The default location is:  
+ > Windows: %HOMEPATH%\Documents\MuseScore3\Soundfonts  
+ > macOS and Linux: ~/Documents/MuseScore3/Soundfonts  
 (From https://musescore.org/en/handbook/3/soundfonts-and-sfz-files)
  - MusicXML file destination. The path where the MusicXML (the template score) will be created.
 

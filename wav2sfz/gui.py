@@ -53,9 +53,7 @@ class MessageBoxMessages(Enum):
     )
     CONVERSION_SUCCESSFUL = MessageBoxMessage(
         "Conversion successful !",
-        "Conversion successful !\n"
-        "Please follow the rest of the instructions here :\n"
-        "INSERT LINK"
+        "Conversion successful !"
     )
 
 
